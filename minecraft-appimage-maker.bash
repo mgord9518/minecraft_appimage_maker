@@ -1,24 +1,29 @@
 #!/bin/bash
 
-# VERSION 0.3
+# VERSION 0.3.1
 # Changes:
-#  * Added more detail in the comments and slightly reformed them
-#  * Added a new constant, ${OUTPUT_APPIMAGE}, which can be changed to change the name of the final AppImage
-#  * Combined the lists of rm and chmod commands into singular, multiline commands
+#  * Added the 'include' directory to be stripped out of the embedded OpenJRE
+#  * Moved the code to get the current JRE download to under the code of changing directories into the TEMP_DIR. This is so out.log doesn't generate in the starting directory
 
 # CONSTANTS
-# Get the link source using standard GNU commands, this needs to be done because the link doesn't stay the same with new versions
-JRE_LINK=$(wget 'https://jdk.java.net/java-se-ri/8-MR3' -O - -o out.log | grep 'linux-x64' | cut -d '"' -f 2 | head -n 1) # This could possibly break in the future if they change the layout of the website
-if [ ! ${?} = 0 ]; then
-	echo -e "${R} > ERROR:${W} Failed to obtain the current release of OpenJRE 8 (this could be caused by a change in the website layout). Check out.log"
-	exit 1
-fi
 TMP_DIR="/tmp/.minecraft_appimage_maker_${RANDOM}"
 START_DIR=${PWD}
 MINECRAFT_LINK='https://launcher.mojang.com/download/Minecraft.tar.gz'
 MINECRAFT_ICON='https://launcher.mojang.com/download/minecraft-launcher.svg'
 APPIMAGETOOL_LINK='https://github.com/AppImage/AppImageKit/releases/download/12/appimagetool-x86_64.AppImage'
 OUTPUT_APPIMAGE='Minecraft.AppImage'
+
+# Create and move to working directory
+mkdir ${TMP_DIR} && cd ${TMP_DIR}
+mkdir AppDir
+
+# Get the link source using standard GNU commands, this needs to be done because the link doesn't stay the same with new versions
+JRE_LINK=$(wget 'https://jdk.java.net/java-se-ri/8-MR3' -O - -o out.log | grep 'linux-x64' | cut -d '"' -f 2 | head -n 1) # This could possibly break in the future if they change the layout of the website
+if [ ! ${?} = 0 ]; then
+	echo -e "${R} > ERROR:${W} Failed to obtain the current release of OpenJRE 8 (this could be caused by a change in the website layout). Check out.log"
+	mv out.log ${START_DIR}/out.log
+	exit 1
+fi
 
 # The desktop entry to be packed into the final AppImage
 DESKTOPFILE='[Desktop Entry]
@@ -43,10 +48,6 @@ W="\e[0;97m"
 # END CONSTANTS
 
 echo -e "${G}STARTING MINECRAFT APPIMAGE BUILDER"
-
-# Create and move to working directory
-mkdir ${TMP_DIR} && cd ${TMP_DIR}
-mkdir AppDir
 echo -e " > ${W}Working directory: ${PWD}"
 
 # Download the latest Minecraft tarball
@@ -91,7 +92,8 @@ rm -r AppDir/OpenJRE/src.zip \
       AppDir/OpenJRE/sample  \
       AppDir/OpenJRE/man     \
       AppDir/OpenJRE/bin     \
-      AppDir/OpenJRE/lib
+      AppDir/OpenJRE/lib     \
+	  AppDir/OpenJRE/include
 
 # Write our ${DESKTOPFILE} variable to the desktop entry
 echo "${DESKTOPFILE}" > AppDir/minecraft-launcher.desktop
