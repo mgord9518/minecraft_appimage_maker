@@ -1,6 +1,8 @@
 # Minecraft AppImage Maker
 A simple BASH script to build an AppImage (portable installation) of Minecraft using the latest launcher from the official site.<br/>
 
+![example](preview.png)
+
 ## To create the AppImage without downloading the script:
 ```bash
 curl 'https://raw.githubusercontent.com/mgord9518/minecraft_appimage_maker/main/minecraft-appimage-maker.bash' | bash
